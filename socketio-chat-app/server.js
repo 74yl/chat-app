@@ -6,15 +6,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html'); // Create this HTML file
-});
+app.use(express.static(__dirname));
 
 io.on('connection', (socket) => {
   console.log('A user connected');
 
-  socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
+  socket.on('message', (data) => {
+    io.emit('message', data);
   });
 
   socket.on('disconnect', () => {
@@ -22,7 +20,6 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+server.listen(3000, () => {
+  console.log('Server is running on http://localhost:3000');
 });
