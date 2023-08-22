@@ -62,22 +62,48 @@ button {
   cursor: pointer;
 }
 
+.user-list {
+  background-color: #f3f3f3;
+  border-radius: 10px;
+  padding: 1rem;
+  width: 200px;
+  margin-right: 1rem;
+}
+
+.username-container {
+  text-align: center;
+  margin-top: 50px;
+}
+
   </style>
   <title>Simple Chat App</title>
 </head>
 <body>
-  <header>
-    <h1>justanother-ChatApp</h1>
-  </header>
-  <main>
-    <div class="chat-list">
-      <!-- Chat messages will be dynamically added here -->
-    </div>
-    <div class="chat-input">
-      <input type="text" placeholder="Type your message...">
-      <button id="sendButton">Send</button>
-    </div>
-  </main>
+  <div class="username-container">
+    <h2>Enter Your Username</h2>
+    <input id="username-input" />
+    <button id="username-submit">Submit</button>
+  </div>
+  <div class="chat-container">
+    <header>
+      <h1>justanother-Chat</h1>
+      <div id="current-username"></div>
+    </header>
+    <main>
+      <!-- <div class="user-list">
+        Online users
+      </div> --> 
+      <div class="chat">
+        <div class="chat-list">
+          <!-- Chat messages will be dynamically added here -->
+        </div>
+        <div class="chat-input">
+          <input type="text" placeholder="Type your message...">
+          <button>Send</button>
+        </div>
+      </div>
+    </main>
+  </div>
 <script src="/socket.io/socket.io.js"></script>
 <script>
   const socket = io();
@@ -85,20 +111,85 @@ button {
   const chatList = document.querySelector('.chat-list');
   const messageInput = document.querySelector('.chat-input input');
   const sendButton = document.querySelector('.chat-input button');
+  const usernameContainer = document.querySelector('.username-container');
+  const usernameInput = document.getElementById('username-input');
+  const usernameSubmitButton = document.getElementById('username-submit');
+  const currentUsername = document.getElementById('current-username');
+  const userContainer = document.querySelector('.user-list');
+  const chatContainer = document.querySelector('.chat-container');
+  const emojiMapping = {
+    'hey': '👋',
+    'hello': '👋',
+    'smile': '😄',
+    'react': "⚛️",
+    'woah': "😮",
+    'lol': "😂",
+    'like': "❤️",
+    'congrats': "🎉",
+    // Add more words and emojis as needed
+  };
+    let username = '';
 
-  sendButton.addEventListener('click', () => {
-    const message = messageInput.value.trim();
-    if (message) {
-      socket.emit('message', message);
-      messageInput.value = '';
+    chatContainer.style.display = 'none';
+
+  usernameSubmitButton.addEventListener('click', () => {
+    username = usernameInput.value.trim();
+    if (username) {
+      usernameContainer.style.display = 'none';
+      currentUsername.textContent = `Logged in as: ${username}`;
+      chatContainer.style.display = 'block';
+      socket.emit('userJoined', username);
     }
   });
+
+    socket.on('userList', (users) => {
+      userContainer.innerHTML = '';
+      users.forEach((user) => {
+        const userElement = document.createElement('div');
+        userElement.textContent = user;
+        userContainer.appendChild(userElement);
+      });
+    });
+
+  sendButton.addEventListener('click', sendMessage);
+
+  messageInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Prevent line break
+      sendMessage();
+    }
+  });
+
+  function sendMessage() {
+    const message = messageInput.value.trim();
+    if (message) {
+      // Replace words with emojis
+      const emojiMessage = replaceWordsWithEmojis(message);
+      socket.emit('message', emojiMessage);
+      messageInput.value = '';
+    }
+  }
+
+  function replaceWordsWithEmojis(message) {
+    // Split the message into words
+    const words = message.toLowerCase().split(' ');
+
+    // Replace words with emojis if they match the mapping
+    const emojiMessage = words.map((word) => {
+      return emojiMapping[word] || word;
+    });
+
+    return emojiMessage.join(' ');
+  }
 
   socket.on('message', (data) => {
     const messageElement = document.createElement('div');
     messageElement.classList.add('message');
     messageElement.textContent = data;
     chatList.appendChild(messageElement);
+
+    // Scroll to the bottom of the chat container
+    chatList.scrollTop = chatList.scrollHeight;
   });
 </script>
 </body>
