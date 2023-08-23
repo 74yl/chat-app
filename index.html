@@ -132,7 +132,7 @@ button {
 
     chatContainer.style.display = 'none';
 
-  usernameSubmitButton.addEventListener('click', () => {
+    function handleUsernameSubmit() {
     username = usernameInput.value.trim();
     if (username) {
       usernameContainer.style.display = 'none';
@@ -140,7 +140,18 @@ button {
       chatContainer.style.display = 'block';
       socket.emit('userJoined', username);
     }
+  }
+
+  usernameSubmitButton.addEventListener('click', handleUsernameSubmit);
+
+  // Listen for "Enter" key press in the username input
+  usernameInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Prevent form submission
+      handleUsernameSubmit();
+    }
   });
+
 
     socket.on('userList', (users) => {
       userContainer.innerHTML = '';
